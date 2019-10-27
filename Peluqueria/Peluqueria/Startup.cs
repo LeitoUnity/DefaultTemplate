@@ -33,6 +33,7 @@ namespace Peluqueria
 
             services.AddDbContext<PeluqueriaContext>(options =>
                     options.UseSqlServer(Configuration.GetConnectionString("PeluqueriaContext")));
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

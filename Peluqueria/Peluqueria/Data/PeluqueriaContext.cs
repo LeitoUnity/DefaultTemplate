@@ -15,5 +15,9 @@ namespace Peluqueria.Data
         }
 
         public DbSet<Client> Clients { get; set; }
+
+        public DbSet<Barbershop> Barbershops { get; set; }
+
+        public DbSet<HairCut> HairCuts { get; set; }
     }
 }

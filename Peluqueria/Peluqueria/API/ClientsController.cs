@@ -14,25 +14,25 @@ namespace Peluqueria.API
     [ApiController]
     public class ClientsController : ControllerBase
     {
-        private readonly PeluqueriaContext _context;
+        private readonly PeluqueriaContext db;
 
-        public ClientsController(PeluqueriaContext context)
+        public ClientsController(PeluqueriaContext _db)
         {
-            _context = context;
+            db = _db;
         }
 
         // GET: api/Clients
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Client>>> GetClient()
         {
-            return await _context.Clients.ToListAsync();
+            return await db.Clients.ToListAsync();
         }
 
         // GET: api/Clients/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Client>> GetClient(int id)
         {
-            var client = await _context.Clients.FindAsync(id);
+            var client = await db.Clients.FindAsync(id);
 
             if (client == null)
             {
@@ -40,6 +40,44 @@ namespace Peluqueria.API
             }
 
             return client;
+        }
+
+        [HttpPost("{id}/GoToWork")]
+        public async Task<ActionResult<Client>> GoToWork(int id)
+        {
+            if(!db.Clients.Any(i => i.ID == id))
+            {
+                return BadRequest();
+            }
+
+            var client = db.Clients.Find(id);
+
+            client.Balance += 5000;
+
+            await db.SaveChangesAsync();
+
+            return Ok(client);
+        }
+
+        [HttpPost("{idUser}/GetHairCut/{idBarbershop}/{idHairCut}")]
+        public async Task<ActionResult<Client>> GetHairCut(int idUser, int idBarbershop, int idHairCut)
+        {
+            if (!db.Barbershops.Any(i => i.ID == idBarbershop) || !db.HairCuts.Any(i => i.ID == idHairCut) || !db.Clients.Any(i => i.ID == idUser))
+            {
+                return BadRequest();
+            }
+
+            var client = db.Clients.Find(idUser);
+            var hairCut = db.HairCuts.Find(idHairCut);
+            var barbershop = db.Barbershops.Find(idBarbershop);
+
+            client.Balance -= hairCut.Price;
+            client.LastHairCut = hairCut;
+            barbershop.Balance += hairCut.Price;
+
+            await db.SaveChangesAsync();
+
+            return Ok(client);
         }
 
         // PUT: api/Clients/5
@@ -51,11 +89,11 @@ namespace Peluqueria.API
                 return BadRequest();
             }
 
-            _context.Entry(client).State = EntityState.Modified;
+            db.Entry(client).State = EntityState.Modified;
 
             try
             {
-                await _context.SaveChangesAsync();
+                await db.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -76,8 +114,8 @@ namespace Peluqueria.API
         [HttpPost]
         public async Task<ActionResult<Client>> PostClient(Client client)
         {
-            _context.Clients.Add(client);
-            await _context.SaveChangesAsync();
+            db.Clients.Add(client);
+            await db.SaveChangesAsync();
 
             return CreatedAtAction("GetClient", new { id = client.ID }, client);
         }
@@ -86,21 +124,21 @@ namespace Peluqueria.API
         [HttpDelete("{id}")]
         public async Task<ActionResult<Client>> DeleteClient(int id)
         {
-            var client = await _context.Clients.FindAsync(id);
+            var client = await db.Clients.FindAsync(id);
             if (client == null)
             {
                 return NotFound();
             }
 
-            _context.Clients.Remove(client);
-            await _context.SaveChangesAsync();
+            db.Clients.Remove(client);
+            await db.SaveChangesAsync();
 
             return client;
         }
 
         private bool ClientExists(int id)
         {
-            return _context.Clients.Any(e => e.ID == id);
+            return db.Clients.Any(e => e.ID == id);
         }
     }
 }
